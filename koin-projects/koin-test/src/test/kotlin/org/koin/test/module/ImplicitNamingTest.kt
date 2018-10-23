@@ -37,8 +37,9 @@ class ImplicitNamingTest : AutoCloseKoinTest() {
         Assert.assertNotNull(get<ComponentB>())
         Assert.assertNotNull(get<ComponentC>())
 
-        val a_b = get<ComponentA>(name = "B.ComponentA")
-        val a_c = get<ComponentA>(name = "C.ComponentA")
+        val name = ComponentA::class.java.canonicalName
+        val a_b = get<ComponentA>(name = "B.$name")
+        val a_c = get<ComponentA>(name = "C.$name")
         assertNotEquals(a_b, a_c)
 
         assertRemainingInstanceHolders(4)

@@ -17,7 +17,6 @@ package org.koin.core
 
 import org.koin.core.Koin.Companion.logger
 import org.koin.core.bean.BeanRegistry
-import org.koin.core.instance.DefinitionFilter
 import org.koin.core.instance.InstanceFactory
 import org.koin.core.instance.InstanceRegistry
 import org.koin.core.instance.InstanceRequest
@@ -78,16 +77,14 @@ class KoinContext(
         name: String = "",
         clazz: KClass<*>,
         scope: Scope? = null,
-        parameters: ParameterDefinition = emptyParameterDefinition(),
-        filter: DefinitionFilter? = null
+        parameters: ParameterDefinition = emptyParameterDefinition()
     ): T = instanceRegistry.resolve(
         InstanceRequest(
             name = name,
             clazz = clazz,
             scope = scope,
             parameters = parameters
-        ),
-        filter
+        )
     )
 
     /**

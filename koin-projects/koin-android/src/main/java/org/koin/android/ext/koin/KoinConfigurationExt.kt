@@ -42,10 +42,11 @@ infix fun KoinConfiguration.with(androidContext: Context): KoinConfiguration {
     return this
 }
 
-private fun KoinConfiguration.declareAndroidApplication(androidContext: Context) {
+private fun KoinConfiguration.declareAndroidApplication(androidContext: Application) {
     getKoin().declareDefinition(
         BeanDefinition.create(
-            definition = { androidContext as Application }
+            name = "android.app.Application",
+            definition = { androidContext }
         )
     )
 }
@@ -53,6 +54,7 @@ private fun KoinConfiguration.declareAndroidApplication(androidContext: Context)
 private fun KoinConfiguration.declareAndroidContext(androidContext: Context) {
     getKoin().declareDefinition(
         BeanDefinition.create(
+            name = "android.content.Context",
             definition = { androidContext }
         )
     )

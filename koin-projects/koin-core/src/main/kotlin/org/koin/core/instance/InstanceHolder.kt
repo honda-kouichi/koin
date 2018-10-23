@@ -14,9 +14,7 @@ interface InstanceHolder<T> {
     fun <T> create(parameters: ParameterDefinition): T {
         try {
             val parameterList = parameters()
-            val instance = bean.definition.invoke(parameterList) as Any
-            instance as T
-            return instance
+            return bean.definition(parameterList) as T
         } catch (e: Throwable) {
             val stack = e.stackTrace.takeWhile { !it.className.contains("sun.reflect") }
                 .joinToString("\n\t\t")

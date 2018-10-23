@@ -42,7 +42,7 @@ import kotlin.reflect.KClass
 data class BeanDefinition<T>(
     val name: String = "",
     var types: List<KClass<*>> = arrayListOf(),
-    val definition: Definition<T>,
+    inline val definition: Definition<T>,
     val primaryType: KClass<*>,
     val path: Path = Path.root(),
     val kind: Kind = Kind.Single,

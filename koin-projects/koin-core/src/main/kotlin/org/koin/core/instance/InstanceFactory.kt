@@ -30,39 +30,44 @@ import org.koin.error.NoScopeException
  */
 open class InstanceFactory {
 
-    val instances = ArrayList<InstanceHolder<*>>()
+    val instances = hashMapOf<String, InstanceHolder<*>>()
     val callbacks = ArrayList<ModuleCallBack>()
 
     /**
      * Retrieve or create instance from bean definition
      * @return Instance / has been created
      */
-    fun <T : Any> retrieveInstance(
+    fun <T : Any> getInstance(
         def: BeanDefinition<T>,
         p: ParameterDefinition,
         scope: Scope? = null
     ): Instance<T> {
         // find holder
-        var holder = find(def, scope)
+        var holder: InstanceHolder<T>? = find(def)
         if (holder == null) {
             holder = create(def, scope)
-            // save it
-            instances += holder
+            save(def, holder)
         }
-        if (holder is ScopeInstanceHolder) {
-            if (holder.scope.isClosed) throw ClosedScopeException("Can't reuse a closed scope : $scope")
+
+        if (holder is ScopeInstanceHolder && holder.scope.isClosed) {
+            throw ClosedScopeException("Can't reuse a closed scope : $scope")
         }
         return holder.get(p)
+    }
+
+    private fun <T : Any> save(
+        def: BeanDefinition<T>,
+        holder: InstanceHolder<T>
+    ) {
+        instances[def.name] = holder
     }
 
     /**
      * Find actual InstanceHolder
      */
     @Suppress("UNCHECKED_CAST")
-    fun <T> find(def: BeanDefinition<T>, scope: Scope? = null): InstanceHolder<T>? =
-        instances
-            .filter { it.bean == def }
-            .firstOrNull { if (it is ScopeInstanceHolder) it.scope == scope else true } as InstanceHolder<T>?
+    private fun <T> find(def: BeanDefinition<T>): InstanceHolder<T>? =
+        instances[def.name] as? InstanceHolder<T>
 
     /**
      * Create InstanceHolder
@@ -89,12 +94,12 @@ open class InstanceFactory {
     /**
      * Release definition instance
      */
-    fun release(definition: BeanDefinition<*>, scope: Scope? = null) {
+    fun release(definition: BeanDefinition<*>) {
         if (definition.kind == Kind.Scope) {
             Koin.logger.debug("release $definition")
-            val holder = find(definition, scope)
+            val holder = find(definition)
             holder?.let {
-                instances.remove(it)
+                instances.remove(definition.name)
             }
         }
     }
@@ -103,8 +108,7 @@ open class InstanceFactory {
      * Delete Instance Holder
      */
     fun delete(definition: BeanDefinition<*>) {
-        val found = instances.filter { it.bean == definition }
-        instances.removeAll(found)
+        instances.remove(definition.name)
     }
 
     /**
@@ -119,9 +123,14 @@ open class InstanceFactory {
      */
     @Deprecated("Release path should not be use anymore. Use Scope API instead")
     fun releasePath(path: Path) {
-        val singeInstances =
-            instances.filter { it.bean.kind == Kind.Single && path.isVisible(it.bean.path) }
-        instances.removeAll(singeInstances)
+        val singeInstanceNames =
+            instances.values.filter { it.bean.kind == Kind.Single && path.isVisible(it.bean.path) }
+                .map { it.bean.name }
+
+        singeInstanceNames.forEach {
+            instances.remove(it)
+        }
+
         callbacks.forEach { it.onRelease(path.name) }
     }
 

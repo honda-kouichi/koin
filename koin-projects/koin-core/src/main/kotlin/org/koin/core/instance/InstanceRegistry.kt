@@ -26,6 +26,7 @@ import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeRegistry
 import org.koin.core.scope.getScope
 import org.koin.core.stack.ResolutionStack
+import org.koin.core.time.logDuration
 import org.koin.core.time.measureDuration
 import org.koin.dsl.definition.BeanDefinition
 import org.koin.error.KoinResolutionException
@@ -48,10 +49,10 @@ class InstanceRegistry(
     /**
      * execute instance from InstanceRequest
      */
-    fun <T : Any> resolve(request: InstanceRequest, filterFunction: DefinitionFilter? = null): T {
+    fun <T : Any> resolve(request: InstanceRequest): T {
 
         val definitionResolver: DefinitionResolver = beanRegistry
-            .resolveDefinitions(request, filterFunction)
+            .resolveDefinitions(request)
 
         val (_, clazz, scope, parameters) = request
         return proceedResolution(clazz, scope, parameters, definitionResolver)
@@ -74,34 +75,34 @@ class InstanceRegistry(
         var resultInstance: T? = null
         val clazzName = clazz.fullname()
         val logIndent: String = resolutionStack.indent()
-        val duration = measureDuration {
+
+        logDuration("$logIndent!-- [$clazzName] total resolution") {
             try {
+                val startChar = if (resolutionStack.isEmpty()) "+" else "+"
+                Koin.logger.info("$logIndent$startChar-- '$clazzName'")
+
                 val beanDefinition: BeanDefinition<T> =
-                    beanRegistry.retrieveDefinition(
-                        definitionResolver,
-                        resolutionStack.last(),
-                        scope
-                    )
+                    logDuration("$logIndent!-- [$clazzName] definition") {
+                        beanRegistry.retrieveDefinition(
+                            definitionResolver,
+                            resolutionStack.last(),
+                            scope
+                        )
+                    }
 
                 // Retrieve scope from DSL
                 val definitionScopeId = beanDefinition.getScope()
                 val targetScope: Scope? = scope ?: scopeRegistry.getScope(definitionScopeId)
 
-                val logPath =
-                    if ("${beanDefinition.path}".isEmpty()) "" else "@ ${beanDefinition.path}"
-                val startChar = if (resolutionStack.isEmpty()) "+" else "+"
-
-                Koin.logger.info("$logIndent$startChar-- '$clazzName' $logPath") // @ [$beanDefinition]")
-                Koin.logger.debug("$logIndent|-- [$beanDefinition]")
-
                 resolutionStack.execute(beanDefinition) {
-                    val (instance, created) = instanceFactory.retrieveInstance(
-                        beanDefinition,
-                        parameters,
-                        targetScope
-                    )
+                    val (instance, created) = logDuration("$logIndent!-- [$clazzName] instance") {
+                        instanceFactory.getInstance(
+                            beanDefinition,
+                            parameters,
+                            targetScope
+                        )
+                    }
 
-                    Koin.logger.debug("$logIndent|-- $instance")
                     // Log creation
                     if (created) {
                         Koin.logger.info("$logIndent\\-- (*) Created")
@@ -114,8 +115,6 @@ class InstanceRegistry(
                 throw KoinResolutionException(executionError)
             }
         }
-
-        Koin.logger.debug("$logIndent!-- [$clazzName] resolved in $duration ms")
 
         return if (resultInstance != null) resultInstance!! else error("Could not create instance for $clazzName")
     }
@@ -168,4 +167,4 @@ class InstanceRegistry(
     }
 }
 
-typealias DefinitionFilter = (BeanDefinition<*>) -> Boolean
+//typealias DefinitionFilter = (BeanDefinition<*>) -> Boolean

@@ -16,7 +16,6 @@
 package org.koin.standalone
 
 import org.koin.core.KoinContext
-import org.koin.core.instance.DefinitionFilter
 import org.koin.core.parameter.ParameterDefinition
 import org.koin.core.parameter.emptyParameterDefinition
 import org.koin.core.scope.Scope
@@ -64,16 +63,17 @@ inline fun <reified T : Any> KoinComponent.get(
 /**
  * Retrieve given dependency for KoinComponent
  * @param name - bean canonicalName
+ * @param clazz
+ * @param scope
  * @param parameters - injection parameters
  */
 fun <T : Any> KoinComponent.get(
     name: String = "",
     clazz: KClass<*>,
     scope: Scope? = null,
-    parameters: ParameterDefinition = emptyParameterDefinition(),
-    filter: DefinitionFilter? = null
+    parameters: ParameterDefinition = emptyParameterDefinition()
 ): T =
-    getKoin().get(name, clazz, scope, parameters, filter)
+    getKoin().get(name, clazz, scope, parameters)
 
 /**
  * inject lazily given property for KoinComponent

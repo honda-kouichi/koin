@@ -16,7 +16,6 @@
 package org.koin.core.bean
 
 import org.koin.core.Koin
-import org.koin.core.instance.DefinitionFilter
 import org.koin.core.instance.InstanceRequest
 import org.koin.core.scope.Scope
 import org.koin.core.scope.isVisibleToScope
@@ -36,6 +35,8 @@ import kotlin.reflect.KClass
 class BeanRegistry() {
 
     val definitions = hashSetOf<BeanDefinition<*>>()
+    val names = hashMapOf<String, BeanDefinition<*>>()
+    val types = hashMapOf<KClass<*>, ArrayList<BeanDefinition<*>>>()
 
     /**
      * Add/Replace an existing bean
@@ -43,18 +44,49 @@ class BeanRegistry() {
      * @param def : Bean definition
      */
     fun declare(definition: BeanDefinition<*>) {
-        val alreadyExists = definitions.contains(definition)
+        val alreadyExists = definitions.contains(definition) || names.contains(definition.name)
 
         if (alreadyExists && !definition.options.allowOverride) {
             throw BeanOverrideException("Try to override definition with $definition, but override is not allowed. Use 'override' option in your definition or module.")
         } else {
-            definitions.remove(definition)
+            definition.types.forEach { type: KClass<*> ->
+                deleteDefinition(type, definition)
+            }
         }
 
-        definitions += definition
+        addDefinition(definition)
 
         val kw = if (alreadyExists) "override" else "declareDefinition"
         Koin.logger.info("[module] $kw $definition")
+    }
+
+    private fun addDefinition(definition: BeanDefinition<*>) {
+        definitions += definition
+        names[definition.name] = definition
+
+        definition.types.forEach { type: KClass<*> ->
+            val definitions: ArrayList<BeanDefinition<*>> = types.getOrElse(type) { arrayListOf() }
+            definitions.add(definition)
+            types[type] = definitions
+        }
+    }
+
+    private fun deleteDefinition(
+        type: KClass<*>,
+        definition: BeanDefinition<*>
+    ) {
+        definitions.remove(definition)
+        names.remove(definition.name)
+
+        val definitions = types[type]
+        if (definitions != null) {
+            definitions.remove(definition)
+            if (definitions.isEmpty()) {
+                types.remove(type)
+            } else {
+                types[type] = definitions
+            }
+        }
     }
 
     /**
@@ -62,33 +94,30 @@ class BeanRegistry() {
      * return DefinitionResolver function
      */
     fun resolveDefinitions(
-        request: InstanceRequest,
-        filterFunction: DefinitionFilter?
+        request: InstanceRequest
     ): DefinitionResolver {
         val (name, clazz) = request
 
-        val definitions = filterFunction?.let { definitions.filter(it) } ?: definitions
-
         return when {
             name.isNotEmpty() -> {
-                { searchByNameAndClass(definitions, name, clazz) }
+                { searchByName(name) }
             }
             else -> {
-                { searchByClass(definitions, clazz) }
+                { searchByClass(clazz) }
             }
         }
     }
 
     private fun searchByClass(
-        definitions: Collection<BeanDefinition<*>>,
         clazz: KClass<*>
-    ): List<BeanDefinition<*>> = definitions.filter { clazz in it.types }
+    ): List<BeanDefinition<*>> = types[clazz] ?: emptyList()
 
-    private fun searchByNameAndClass(
-        definitions: Collection<BeanDefinition<*>>,
-        name: String,
-        clazz: KClass<*>
-    ): List<BeanDefinition<*>> = definitions.filter { name == it.name && clazz in it.types }
+    private fun searchByName(
+        name: String
+    ): List<BeanDefinition<*>> {
+        val beanDefinition = names[name]
+        return beanDefinition?.let { listOf(beanDefinition) } ?: emptyList()
+    }
 
 
     /**
@@ -118,7 +147,7 @@ class BeanRegistry() {
         lastInStack: BeanDefinition<*>?
     ): List<BeanDefinition<*>> {
         val candidates =
-            lastInStack?.let { definitionResolver().filter { lastInStack.isVisibleTo(it) } }
+            lastInStack?.let { definition -> definitionResolver().filter { definition.isVisibleTo(it) } }
                 ?: definitionResolver()
         return candidates.distinct()
     }

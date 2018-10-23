@@ -18,7 +18,7 @@ package org.koin.standalone
 import org.koin.core.Koin
 import org.koin.core.KoinConfiguration
 import org.koin.core.PropertiesConfiguration
-import org.koin.core.time.measureDuration
+import org.koin.core.time.logDuration
 import org.koin.dsl.module.Module
 import org.koin.error.AlreadyStartedException
 import org.koin.log.Logger
@@ -40,7 +40,8 @@ object StandAloneContext {
     /**
      * Retrieve current KoinConfiguration
      */
-    fun getKoinConfig(): KoinConfiguration = koinConfiguration ?: error("try to use koinConfiguration but is null")
+    fun getKoinConfig(): KoinConfiguration =
+        koinConfiguration ?: error("try to use koinConfiguration but is null")
 
     /**
      * Return current Koin context or create it
@@ -90,9 +91,8 @@ object StandAloneContext {
         if (isStarted) {
             throw AlreadyStartedException("Koin is already started. Run startKoin only once or use loadKoinModules")
         }
-        val (koin, duration) = startNewContext(logger, propertiesConfiguration, list)
+        val koin = startNewContext(logger, propertiesConfiguration, list)
         isStarted = true
-        Koin.logger.debug("Koin started in $duration ms")
         return koin
     }
 
@@ -100,16 +100,16 @@ object StandAloneContext {
         logger: Logger,
         propertiesConfiguration: PropertiesConfiguration,
         list: List<Module>
-    ): Pair<KoinConfiguration, Double> {
+    ): KoinConfiguration {
         val koin = getCurrentContext()
-        val duration = measureDuration {
+        logDuration("[Koin] started") {
             Koin.logger = logger
             koin.apply {
                 loadAllProperties(propertiesConfiguration)
                 loadModules(list)
             }
         }
-        return Pair(koin, duration)
+        return koin
     }
 
     /**

@@ -100,11 +100,11 @@ class ScopeAPITest : AutoCloseKoinTest() {
 
         val session1_1: Scope = koin.createScope("session1")
 
-        val b_1 = get<B>(name = "mod1.B")
+        val b_1 = get<B>(scope = session1_1)
 
         val session1_2: Scope = koin.createScope("session2")
 
-        val b_2 = get<B>(name = "mod2.B")
+        val b_2 = get<B>(scope = session1_2)
 
         assertNotEquals(b_1, b_2)
 

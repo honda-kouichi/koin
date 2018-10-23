@@ -2,8 +2,11 @@ package org.koin.core
 
 import org.koin.core.instance.ModuleCallBack
 import org.koin.core.scope.ScopeCallback
+import org.koin.core.scope.getScope
+import org.koin.core.time.logDuration
 import org.koin.core.time.measureDuration
 import org.koin.dsl.context.ModuleDefinition
+import org.koin.dsl.definition.BeanDefinition
 import org.koin.dsl.definition.BeanDefinitionOptions
 import org.koin.dsl.module.Module
 import org.koin.dsl.path.Path
@@ -27,14 +30,13 @@ class KoinConfiguration(private val koinContext: KoinContext) {
      * load given list of module instances into current StandAlone koin context
      */
     fun loadModules(modules: Collection<Module>): KoinConfiguration = synchronized(this) {
-        val duration = measureDuration {
+        logDuration("[modules] loaded") {
             modules.forEach { module ->
                 registerDefinitions(module(koinContext))
             }
 
             Koin.logger.info("[modules] loaded ${beanRegistry.definitions.size} definitions")
         }
-        Koin.logger.debug("[modules] loaded in $duration ms")
 
         instanceRegistry.createEagerInstances()
         return this
@@ -43,7 +45,6 @@ class KoinConfiguration(private val koinContext: KoinContext) {
     /**
      * Register moduleDefinition definitions & subModules
      */
-    //TODO Refactor
     private fun registerDefinitions(
         moduleDefinition: ModuleDefinition,
         parentModuleDefinition: ModuleDefinition? = null,
@@ -65,19 +66,9 @@ class KoinConfiguration(private val koinContext: KoinContext) {
                 if (moduleDefinition.override) moduleDefinition.override else {
                     definitionOptions.allowOverride
                 }
-            val name = if (definition.name.isEmpty()) {
-                val pathString =
-                    if (consolidatedPath == Path.Companion.root()) "" else "$consolidatedPath."
-                "$pathString${definition.primaryType.name()}"
-            } else definition.name
-            val def = definition.copy(
-                name = name,
-                options = BeanDefinitionOptions(
-                    isEager = eager,
-                    allowOverride = override
-                ),
-                path = consolidatedPath
-            )
+            val name = defineDefinitionName(definition, consolidatedPath)
+            val def = updateDefinition(definition, name, eager, override, consolidatedPath)
+
             instanceFactory.delete(def)
             beanRegistry.declare(def)
         }
@@ -90,6 +81,37 @@ class KoinConfiguration(private val koinContext: KoinContext) {
                 consolidatedPath
             )
         }
+    }
+
+    private fun updateDefinition(
+        definition: BeanDefinition<*>,
+        name: String,
+        eager: Boolean,
+        override: Boolean,
+        consolidatedPath: Path
+    ): BeanDefinition<out Any?> {
+        return definition.copy(
+            name = name,
+            options = BeanDefinitionOptions(
+                isEager = eager,
+                allowOverride = override
+            ),
+            path = consolidatedPath
+        )
+    }
+
+    private fun defineDefinitionName(
+        definition: BeanDefinition<*>,
+        consolidatedPath: Path
+    ): String {
+        val name = definition.name
+        return if (name.isEmpty()) {
+            val scope = definition.getScope()
+            val scopeString = if (scope.isEmpty()) "" else "$scope."
+            val pathString =
+                if (consolidatedPath == Path.root()) "" else "$consolidatedPath."
+            "$scopeString$pathString${definition.primaryType.fullname()}"
+        } else name
     }
 
     /**
