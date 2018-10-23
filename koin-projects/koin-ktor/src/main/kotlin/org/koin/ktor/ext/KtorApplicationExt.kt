@@ -123,7 +123,7 @@ inline fun <reified T> Application.getProperty(key: String, defaultValue: T) =
 /**
  * Help work on ModuleDefinition
  */
-fun Application.getKoin() = getKoinConfig().koinContext
+fun Application.getKoin() = getKoinConfig().getKoin()
 
 /**
  * Set property value

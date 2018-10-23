@@ -71,7 +71,7 @@ inline fun <reified T : Any> KoinTest.declareMock(
     binds: List<KClass<*>> = emptyList()
 ) {
     val clazz = T::class.java
-    Koin.logger.info("[mock] declare mock for $clazz")
+    Koin.logger.info("[mock] declareDefinition mock for $clazz")
     StandAloneContext.loadKoinModules(
         module(module ?: Path.ROOT) {
             val def = if (!isFactory) {
@@ -93,7 +93,7 @@ inline fun <reified T : Any> KoinTest.declareMock(
  */
 fun dumpModulePaths() {
     Koin.logger.info("Module paths:")
-    getKoinConfig().koinContext.instanceRegistry.pathRegistry.paths.forEach {
+    getKoinConfig().getKoin().instanceRegistry.pathRegistry.paths.forEach {
         Koin.logger.info(
             "[$it]"
         )

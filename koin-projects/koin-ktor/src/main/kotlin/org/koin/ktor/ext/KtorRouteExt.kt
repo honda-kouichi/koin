@@ -96,7 +96,7 @@ inline fun <reified T> Route.getProperty(key: String, defaultValue: T) =
 /**
  * Help work on ModuleDefinition
  */
-fun Route.getKoin() = getKoinConfig().koinContext
+fun Route.getKoin() = getKoinConfig().getKoin()
 
 /**
  * Set property value

@@ -18,36 +18,36 @@ val module2 = module {
     single { ComponentA() }
 }
 
+abstract class CustomKoinComponent : KoinComponent {
+    val manualContext: KoinContext by lazy {
+        KoinConfiguration.create().loadModules(listOf(module1)).getKoin()
+    }
+
+    override fun getKoin(): KoinContext = manualContext
+}
+
+class CustomComponent : CustomKoinComponent() {
+    val componentA: ComponentA by inject()
+}
+
 class ManualContext {
-
-
-    abstract class CustomKoinComponent : KoinComponent {
-        val manualContext: KoinContext by lazy {
-            KoinConfiguration.create().loadModules(listOf(module1)).koinContext
-        }
-
-        override fun getKoin(): KoinContext = manualContext
-    }
-
-    class CustomComponent : CustomKoinComponent() {
-        val componentA: ComponentA by inject()
-    }
-
-
     @Test
     fun `get different instances`() {
+        val koinInstance1 = KoinConfiguration.create().loadModules(listOf(module1)).getKoin()
         val a_1 =
-            KoinConfiguration.create().loadModules(listOf(module1)).koinContext.get<ComponentA>()
+            koinInstance1.get<ComponentA>()
 
+        val koinInstance2 = KoinConfiguration.create().loadModules(listOf(module2)).getKoin()
         val a_2 =
-            KoinConfiguration.create().loadModules(listOf(module2)).koinContext.get<ComponentA>()
+            koinInstance2.get<ComponentA>()
         assertNotEquals(a_1, a_2)
     }
 
     @Test
     fun `custom KoinComponent`() {
+        val customKoinInstance = KoinConfiguration.create().loadModules(listOf(module2)).getKoin()
         val a_2 =
-            KoinConfiguration.create().loadModules(listOf(module2)).koinContext.get<ComponentA>()
+            customKoinInstance.get<ComponentA>()
         assertNotEquals(CustomComponent().componentA, a_2)
     }
 }

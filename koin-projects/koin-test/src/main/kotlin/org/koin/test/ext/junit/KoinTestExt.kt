@@ -29,7 +29,7 @@ import kotlin.reflect.KClass
  * @author Arnaud Giuliani
  */
 
-internal fun context() = StandAloneContext.getKoinConfig().koinContext
+internal fun context() = StandAloneContext.getKoinConfig().getKoin()
 
 /**
  * Assert context beanDefinition definitionCount

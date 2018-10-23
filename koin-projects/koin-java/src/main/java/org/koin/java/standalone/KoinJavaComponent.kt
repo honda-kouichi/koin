@@ -75,7 +75,7 @@ object KoinJavaComponent {
      * @param key - key property
      */
     @JvmStatic
-    fun getKoin(): KoinContext = StandAloneContext.getKoinConfig().koinContext
+    fun getKoin(): KoinContext = StandAloneContext.getKoinConfig().getKoin()
 
     /**
      * inject lazily given property

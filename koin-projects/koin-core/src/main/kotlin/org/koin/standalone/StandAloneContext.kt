@@ -37,17 +37,10 @@ object StandAloneContext {
      */
     var koinConfiguration: KoinConfiguration? = null
 
-    fun getKoinConfig(): KoinConfiguration = koinConfiguration ?: error("KoinConfiguration is null")
-
     /**
-     * Load Koin modules - whether Koin is already started or not
-     * allow late module definition load (e.g: libraries ...)
-     *
-     * @param modules : Module
+     * Retrieve current KoinConfiguration
      */
-    fun loadKoinModules(vararg modules: Module): KoinConfiguration {
-        return getCurrentContext().loadModules(modules.toList())
-    }
+    fun getKoinConfig(): KoinConfiguration = koinConfiguration ?: error("try to use koinConfiguration but is null")
 
     /**
      * Return current Koin context or create it
@@ -58,6 +51,16 @@ object StandAloneContext {
             koinConfiguration = KoinConfiguration.create()
         }
         return getKoinConfig()
+    }
+
+    /**
+     * Load Koin modules - whether Koin is already started or not
+     * allow late module definition load (e.g: libraries ...)
+     *
+     * @param modules : Module
+     */
+    fun loadKoinModules(vararg modules: Module): KoinConfiguration {
+        return loadKoinModules(modules.toList())
     }
 
     /**

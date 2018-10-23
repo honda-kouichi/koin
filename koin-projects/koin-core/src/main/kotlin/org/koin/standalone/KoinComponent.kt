@@ -139,5 +139,5 @@ fun KoinComponent.releaseContext(path: String): Unit = release(path)
 /**
  * Access to Koin context
  */
-internal fun getKoinContext(): KoinContext = getKoinConfig().koinContext
+internal fun getKoinContext(): KoinContext = getKoinConfig().getKoin()
 

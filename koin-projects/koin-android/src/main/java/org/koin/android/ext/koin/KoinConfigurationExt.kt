@@ -35,7 +35,7 @@ import java.util.*
  * @param androidContext - Context
  */
 infix fun KoinConfiguration.with(androidContext: Context): KoinConfiguration {
-    Koin.logger.info("[init] declare Android Context")
+    Koin.logger.info("[init] declareDefinition Android Context")
     declareAndroidContext(androidContext)
     if (androidContext is Application) {
         declareAndroidApplication(androidContext)
@@ -44,7 +44,7 @@ infix fun KoinConfiguration.with(androidContext: Context): KoinConfiguration {
 }
 
 private fun KoinConfiguration.declareAndroidApplication(androidContext: Context) {
-    koinContext.instanceRegistry.beanRegistry.declare(
+    getKoin().declareDefinition(
         BeanDefinition(
             clazz = Application::class,
             definition = { androidContext },
@@ -54,7 +54,7 @@ private fun KoinConfiguration.declareAndroidApplication(androidContext: Context)
 }
 
 private fun KoinConfiguration.declareAndroidContext(androidContext: Context) {
-    koinContext.instanceRegistry.beanRegistry.declare(
+    getKoin().declareDefinition(
         BeanDefinition(
             clazz = Context::class,
             definition = { androidContext },
@@ -75,7 +75,7 @@ fun KoinConfiguration.loadPropertiesForAndroid(
     val koinProperties = Properties()
     try {
         androidContext.assets.open(koinPropertyFile).use { koinProperties.load(it) }
-        val nb = koinContext.propertyResolver.import(koinProperties)
+        val nb = getKoin().loadProperties(koinProperties)
         Koin.logger.info("[Android-Properties] loaded $nb properties from assets/koin.properties")
     } catch (e: Exception) {
         Koin.logger.info("[Android-Properties] no properties in assets/$koinPropertyFile to load")

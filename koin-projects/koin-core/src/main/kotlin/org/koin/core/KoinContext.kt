@@ -27,8 +27,10 @@ import org.koin.core.path.PathRegistry
 import org.koin.core.property.PropertyRegistry
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeRegistry
+import org.koin.dsl.definition.BeanDefinition
 import org.koin.error.MissingPropertyException
 import org.koin.error.NoScopeFoundException
+import java.util.*
 import kotlin.reflect.KClass
 
 
@@ -134,6 +136,20 @@ class KoinContext(
      * Set a property
      */
     fun setProperty(key: String, value: Any) = propertyResolver.add(key, value)
+
+    /**
+     * Declare a definition
+     */
+    fun declareDefinition(definition: BeanDefinition<*>): Unit =
+        instanceRegistry.beanRegistry.declare(definition)
+
+    /**
+     * Import given properties
+     * return total count of properties
+     */
+    fun loadProperties(koinProperties: Properties): Int {
+        return propertyResolver.import(koinProperties)
+    }
 
     /**
      * Close all resources

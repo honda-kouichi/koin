@@ -23,4 +23,4 @@ import org.koin.standalone.StandAloneContext.getKoinConfig
  *
  * @author Arnaud Giuliani
  */
-internal fun context(): KoinContext = getKoinConfig().koinContext
+internal fun context(): KoinContext = getKoinConfig().getKoin()

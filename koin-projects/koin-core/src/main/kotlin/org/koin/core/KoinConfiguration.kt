@@ -13,7 +13,7 @@ import java.util.*
  *
  * API to Help build & use KoinContext
  */
-class KoinConfiguration(val koinContext: KoinContext) {
+class KoinConfiguration(private val koinContext: KoinContext) {
 
     private val propertyResolver = koinContext.propertyResolver
     private val instanceRegistry = koinContext.instanceRegistry
@@ -166,6 +166,11 @@ class KoinConfiguration(val koinContext: KoinContext) {
     }
 
     /**
+     * Get Koin context
+     */
+    fun getKoin(): KoinContext = koinContext
+
+    /**
      * Close actual context
      */
     fun close() {
@@ -180,11 +185,3 @@ class KoinConfiguration(val koinContext: KoinContext) {
     }
 }
 
-/**
- * Properties configuration
- */
-data class PropertiesConfiguration(
-    val useEnvironmentProperties: Boolean = false,
-    val useKoinPropertiesFile: Boolean = false,
-    val extraProperties: Map<String, Any> = HashMap()
-)
