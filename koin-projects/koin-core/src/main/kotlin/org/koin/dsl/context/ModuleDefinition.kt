@@ -21,6 +21,7 @@ import org.koin.core.parameter.emptyParameterDefinition
 import org.koin.core.scope.Scope
 import org.koin.core.scope.setScope
 import org.koin.dsl.definition.BeanDefinition
+import org.koin.dsl.definition.BeanDefinitionOptions
 import org.koin.dsl.definition.Definition
 import org.koin.dsl.definition.Kind
 
@@ -93,13 +94,9 @@ class ModuleDefinition(
         noinline definition: Definition<T>
     ): BeanDefinition<T> {
         val beanDefinition =
-            BeanDefinition(
-                name,
-                T::class,
-                kind = kind,
-                isEager = createOnStart,
-                allowOverride = override,
-                definition = definition
+            BeanDefinition.create(
+                name, kind, definition,
+                BeanDefinitionOptions(isEager = createOnStart, allowOverride = override)
             )
         definitions += beanDefinition
         return beanDefinition

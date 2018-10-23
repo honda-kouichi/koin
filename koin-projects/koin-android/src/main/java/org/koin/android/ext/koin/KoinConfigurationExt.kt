@@ -21,7 +21,6 @@ import android.content.Context
 import org.koin.core.Koin
 import org.koin.core.KoinConfiguration
 import org.koin.dsl.definition.BeanDefinition
-import org.koin.dsl.definition.Kind
 import java.util.*
 
 /**
@@ -45,20 +44,16 @@ infix fun KoinConfiguration.with(androidContext: Context): KoinConfiguration {
 
 private fun KoinConfiguration.declareAndroidApplication(androidContext: Context) {
     getKoin().declareDefinition(
-        BeanDefinition(
-            clazz = Application::class,
-            definition = { androidContext },
-            kind = Kind.Single
+        BeanDefinition.create(
+            definition = { androidContext as Application }
         )
     )
 }
 
 private fun KoinConfiguration.declareAndroidContext(androidContext: Context) {
     getKoin().declareDefinition(
-        BeanDefinition(
-            clazz = Context::class,
-            definition = { androidContext },
-            kind = Kind.Single
+        BeanDefinition.create(
+            definition = { androidContext }
         )
     )
 }

@@ -16,11 +16,12 @@
 package org.koin.core.bean
 
 import org.koin.core.Koin
+import org.koin.core.instance.DefinitionFilter
+import org.koin.core.instance.InstanceRequest
 import org.koin.core.name
 import org.koin.core.scope.Scope
 import org.koin.core.scope.isVisibleToScope
 import org.koin.dsl.definition.BeanDefinition
-import org.koin.dsl.path.Path
 import org.koin.error.BeanOverrideException
 import org.koin.error.DependencyResolutionException
 import org.koin.error.NoBeanDefFoundException
@@ -44,49 +45,62 @@ class BeanRegistry() {
      * @param def : Bean definition
      */
     fun declare(definition: BeanDefinition<*>) {
-        val isOverriding = definitions.remove(definition)
+        val alreadyExists = definitions.contains(definition)
 
-        if (isOverriding && !definition.allowOverride) {
+        if (alreadyExists && !definition.options.allowOverride) {
             throw BeanOverrideException("Try to override definition with $definition, but override is not allowed. Use 'override' option in your definition or module.")
+        } else {
+            definitions.remove(definition)
         }
 
         definitions += definition
 
-        val kw = if (isOverriding) "override" else "declareDefinition"
+        val kw = if (alreadyExists) "override" else "declareDefinition"
         Koin.logger.info("[module] $kw $definition")
     }
 
-    fun searchByClass(
-        definitions: Collection<BeanDefinition<*>>,
-        clazz: KClass<*>
-    ): List<BeanDefinition<*>> {
-        return definitions.filter { clazz in it.classes }
+    /**
+     * Search for given BeanDefinition
+     * return DefinitionResolver function
+     */
+    fun resolveDefinitions(
+        request: InstanceRequest,
+        filterFunction: DefinitionFilter?
+    ): DefinitionResolver {
+        val (name, clazz) = request
+
+        val definitions = filterFunction?.let { definitions.filter(it) } ?: definitions
+
+        return  when {
+            name.isNotEmpty() -> {
+                { searchByNameAndClass(definitions, name, clazz) }
+            }
+            else -> {
+                { searchByClass(definitions, clazz) }
+            }
+        }
     }
 
-    fun searchByNameAndClass(
+    private fun searchByClass(
+        definitions: Collection<BeanDefinition<*>>,
+        clazz: KClass<*>
+    ): List<BeanDefinition<*>> = definitions.filter { clazz in it.types }
+
+    private fun searchByNameAndClass(
         definitions: Collection<BeanDefinition<*>>,
         name: String,
         clazz: KClass<*>
-    ): List<BeanDefinition<*>> {
-        return definitions.filter { name == it.name && clazz in it.classes }
-    }
+    ): List<BeanDefinition<*>> = definitions.filter { name == it.name && clazz in it.types }
+
 
     /**
-     * Get bean definitions from given path
+     * Retrieve bean definition
+     * @param clazzName - class canonicalName
+     * @param modulePath - Module path
+     * @param definitionResolver - function to find bean definition
+     * @param lastInStack - to check visibility with last bean in stack
      */
-    fun getDefinitionsInPaths(paths: Set<Path>): List<BeanDefinition<*>> {
-        return definitions.filter { def -> definitions.first { it == def }.path in paths }
-    }
-
-
     @Suppress("UNCHECKED_CAST")
-            /**
-             * Retrieve bean definition
-             * @param clazzName - class canonicalName
-             * @param modulePath - Module path
-             * @param definitionResolver - function to find bean definition
-             * @param lastInStack - to check visibility with last bean in stack
-             */
     fun <T> retrieveDefinition(
         clazz: KClass<*>,
         scope: Scope?,
@@ -95,7 +109,7 @@ class BeanRegistry() {
     ): BeanDefinition<T> {
         val candidates: List<BeanDefinition<*>> = (if (lastInStack != null) {
             val found = definitionResolver()
-            val filteredByVisibility = found.filter { lastInStack.canSee(it) }
+            val filteredByVisibility = found.filter { lastInStack.isVisibleTo(it) }
             if (found.isNotEmpty() && filteredByVisibility.isEmpty()) {
                 throw NotVisibleException("Can't proceedResolution '$clazz' - Definition is not visible from last definition : $lastInStack")
             }
@@ -104,7 +118,7 @@ class BeanRegistry() {
             definitionResolver()
         }).distinct()
 
-        val filterByScope = if (scope != null){
+        val filterByScope = if (scope != null) {
             candidates.filter { it.isVisibleToScope(scope) }
         } else candidates
 
@@ -126,3 +140,5 @@ class BeanRegistry() {
         definitions.clear()
     }
 }
+
+typealias DefinitionResolver = () -> List<BeanDefinition<*>>

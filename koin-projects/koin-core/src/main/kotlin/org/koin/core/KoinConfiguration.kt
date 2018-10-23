@@ -4,6 +4,7 @@ import org.koin.core.instance.ModuleCallBack
 import org.koin.core.scope.ScopeCallback
 import org.koin.core.time.measureDuration
 import org.koin.dsl.context.ModuleDefinition
+import org.koin.dsl.definition.BeanDefinitionOptions
 import org.koin.dsl.module.Module
 import org.koin.dsl.path.Path
 import java.util.*
@@ -57,19 +58,24 @@ class KoinConfiguration(private val koinContext: KoinContext) {
 
         // Add definitions & propagate eager/override
         moduleDefinition.definitions.forEach { definition ->
+            val definitionOptions = definition.options
             val eager =
-                if (moduleDefinition.createOnStart) moduleDefinition.createOnStart else definition.isEager
+                if (moduleDefinition.createOnStart) moduleDefinition.createOnStart else definitionOptions.isEager
             val override =
-                if (moduleDefinition.override) moduleDefinition.override else definition.allowOverride
+                if (moduleDefinition.override) moduleDefinition.override else {
+                    definitionOptions.allowOverride
+                }
             val name = if (definition.name.isEmpty()) {
                 val pathString =
                     if (consolidatedPath == Path.Companion.root()) "" else "$consolidatedPath."
-                "$pathString${definition.clazz.name()}"
+                "$pathString${definition.primaryType.name()}"
             } else definition.name
             val def = definition.copy(
                 name = name,
-                isEager = eager,
-                allowOverride = override,
+                options = BeanDefinitionOptions(
+                    isEager = eager,
+                    allowOverride = override
+                ),
                 path = consolidatedPath
             )
             instanceFactory.delete(def)

@@ -37,7 +37,7 @@ class ResolutionStack {
      * @param beanDefinition - bean definition
      * @param execution - executed code once bean definition has been stacked
      */
-    fun resolve(beanDefinition: BeanDefinition<*>, execution: () -> Unit) {
+    fun execute(beanDefinition: BeanDefinition<*>, execution: () -> Unit) {
         checkStackEnter(beanDefinition)
 
         stack.add(beanDefinition)

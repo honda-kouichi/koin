@@ -17,7 +17,6 @@ package org.koin.test.ext.koin
 
 import org.koin.core.Koin
 import org.koin.core.KoinContext
-import org.koin.core.parameter.ParameterDefinition
 import org.koin.dsl.definition.BeanDefinition
 import kotlin.reflect.KClass
 
@@ -50,7 +49,7 @@ fun KoinContext.beanDefinitions() = instanceRegistry.beanRegistry.definitions
  * @param clazz - bean class
  */
 fun KoinContext.beanDefinition(clazz: KClass<*>): BeanDefinition<*>? =
-    beanDefinitions().firstOrNull { it.clazz == clazz }
+    beanDefinitions().firstOrNull { clazz in it.types}
 
 /**
  * Return all contexts of Koin

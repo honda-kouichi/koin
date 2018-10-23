@@ -15,7 +15,6 @@
  */
 package org.koin.dsl.definition
 
-import org.koin.core.parameter.ParameterList
 import org.koin.dsl.path.Path
 import org.koin.error.DefinitionBindingException
 import kotlin.reflect.KClass
@@ -27,36 +26,35 @@ import kotlin.reflect.KClass
  *
  * Gather type of T
  * defined by lazy/function
- * has a type (clazz)
+ * has a type (primaryType)
  * has a BeanType : default singleton
  * has a canonicalName, if specified
  *
  * @param name - bean canonicalName
- * @param clazz - bean class
- * @param kind - bean definition Kind
- * @param types - list of assignable types
- * @param isEager - definition tagged to be created on start
- * @param allowOverride - definition tagged to allow definition override or not
+ * @param types - all biund types
  * @param definition - bean definition function
+ * @param primaryType - bean class
+ * @param path - logical path
+ * @param kind - bean definition Kind
+ * @param attributes
+ * @param options
  */
-data class BeanDefinition<out T>(
+data class BeanDefinition<T>(
     val name: String = "",
-    val clazz: KClass<*>,
     var types: List<KClass<*>> = arrayListOf(),
+    val definition: Definition<T>,
+    val primaryType: KClass<*>,
     val path: Path = Path.root(),
-    val kind: Kind,
-    val isEager: Boolean = false,
-    val allowOverride: Boolean = false,
-    val attributes : HashMap<String,Any> = HashMap(),
-    val definition: Definition<T>
+    val kind: Kind = Kind.Single,
+    val attributes: BeanDefinitionAttributes = BeanDefinitionAttributes(),
+    val options: BeanDefinitionOptions = BeanDefinitionOptions()
 ) {
-    internal val classes: List<KClass<*>> = listOf(clazz) + types
 
     /**
      * Add a compatible type to current bounded definition
      */
     infix fun bind(clazz: KClass<*>): BeanDefinition<*> {
-        if (!clazz.java.isAssignableFrom(this.clazz.java)) {
+        if (!clazz.java.isAssignableFrom(this.primaryType.java)) {
             throw DefinitionBindingException("Can't bind type '$clazz' for definition $this")
         } else {
             types += clazz
@@ -67,51 +65,54 @@ data class BeanDefinition<out T>(
     /**
      * Check visibility if "this" can see "other"
      */
-    fun canSee(other: BeanDefinition<*>) = other.path.isVisible(this.path)
+    fun isVisibleTo(other: BeanDefinition<*>) = other.path.isVisible(this.path)
 
     override fun toString(): String {
         val beanName = if (name.isEmpty()) "" else "name='$name',"
-        val clazz = "class='${clazz.java.canonicalName}'"
+        val clazz = "class='${primaryType.java.canonicalName}'"
         val type = "$kind"
-        val binds = if (types.isEmpty()) "" else ", binds~${boundTypes()}"
         val path = if (path != Path.root()) ", path:'$path'" else ""
-        return "$type [$beanName$clazz$binds$path]"
+        return "$type [$beanName$clazz$path]"
     }
 
-    private fun boundTypes(): String =
-        "(" + types.joinToString { it.java.canonicalName } + ")"
 
     override fun equals(other: Any?): Boolean {
-        return if (other is BeanDefinition<*>) {
-            name == other.name &&
-                    clazz == other.clazz &&
-                    path == other.path &&
-                    attributes == other.attributes &&
-                    types == other.types
-        } else false
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as BeanDefinition<*>
+
+        if (name != other.name) return false
+        if (types != other.types) return false
+        if (attributes != other.attributes) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + clazz.hashCode()
-        result = 31 * result + types.hashCode()
-        result = 31 * result + attributes.hashCode()
-        result = 31 * result + path.hashCode()
-        return result
+        return name.hashCode() + types.hashCode() + attributes.hashCode()
     }
-}
 
-/**
- * Type Definition function - what's build a given component T
- */
-typealias Definition<T> = (ParameterList) -> T
+    companion object {
 
-/**
- * Bean definition Kind
- * - single
- * - factory
- * - scope
- */
-enum class Kind {
-    Single, Factory, Scope
+        /**
+         * Create a definition
+         */
+        inline fun <reified T> create(
+            name: String = "",
+            kind: Kind = Kind.Single,
+            noinline definition: Definition<T>,
+            options: BeanDefinitionOptions = BeanDefinitionOptions()
+        ): BeanDefinition<T> {
+            val clazz = T::class
+            return BeanDefinition(
+                name = name,
+                primaryType = clazz,
+                types = listOf(clazz),
+                definition = definition,
+                kind = kind,
+                options = options
+            )
+        }
+    }
 }

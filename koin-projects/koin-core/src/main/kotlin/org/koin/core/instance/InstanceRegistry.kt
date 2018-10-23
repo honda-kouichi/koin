@@ -17,6 +17,7 @@ package org.koin.core.instance
 
 import org.koin.core.Koin
 import org.koin.core.bean.BeanRegistry
+import org.koin.core.bean.DefinitionResolver
 import org.koin.core.fullname
 import org.koin.core.parameter.ParameterDefinition
 import org.koin.core.parameter.emptyParameterDefinition
@@ -44,25 +45,15 @@ class InstanceRegistry(
     private val resolutionStack = ResolutionStack()
 
     /**
-     * resolve instance from InstanceRequest
+     * execute instance from InstanceRequest
      */
     fun <T : Any> resolve(request: InstanceRequest, filterFunction: DefinitionFilter? = null): T {
 
-        val definitions = (if (filterFunction != null) {
-            beanRegistry.definitions.filter(filterFunction)
-        } else beanRegistry.definitions)
+        val definitionResolver: DefinitionResolver = beanRegistry
+            .resolveDefinitions(request, filterFunction)
 
-        return request.run {
-            val search = when {
-                name.isNotEmpty() -> {
-                    { beanRegistry.searchByNameAndClass(definitions, name, clazz) }
-                }
-                else -> {
-                    { beanRegistry.searchByClass(definitions, clazz) }
-                }
-            }
-            proceedResolution(clazz, scope,parameters, search)
-        }
+        val (_, clazz, scope, parameters) = request
+        return proceedResolution(clazz, scope, parameters, definitionResolver)
     }
 
     /**
@@ -72,11 +63,11 @@ class InstanceRegistry(
      * @param parameters - Parameters
      * @param definitionResolver - function to find bean definitions
      */
-    fun <T : Any> proceedResolution(
+    private fun <T : Any> proceedResolution(
         clazz: KClass<*>,
-        scope : Scope?,
+        scope: Scope?,
         parameters: ParameterDefinition,
-        definitionResolver: () -> List<BeanDefinition<*>>
+        definitionResolver: DefinitionResolver
     ): T = synchronized(this) {
 
         var resultInstance: T? = null
@@ -93,17 +84,17 @@ class InstanceRegistry(
                     )
 
                 // Retrieve scope from DSL
-                val associatedScopeId = beanDefinition.getScope()
-                val targetScope : Scope? = scope ?: if (associatedScopeId.isNotEmpty()) scopeRegistry.getScope(associatedScopeId) else null
+                val definitionScopeId = beanDefinition.getScope()
+                val targetScope: Scope? = scope ?: scopeRegistry.getScope(definitionScopeId)
 
                 val logPath =
-                        if ("${beanDefinition.path}".isEmpty()) "" else "@ ${beanDefinition.path}"
+                    if ("${beanDefinition.path}".isEmpty()) "" else "@ ${beanDefinition.path}"
                 val startChar = if (resolutionStack.isEmpty()) "+" else "+"
 
                 Koin.logger.info("$logIndent$startChar-- '$clazzName' $logPath") // @ [$beanDefinition]")
                 Koin.logger.debug("$logIndent|-- [$beanDefinition]")
 
-                resolutionStack.resolve(beanDefinition) {
+                resolutionStack.execute(beanDefinition) {
                     val (instance, created) = instanceFactory.retrieveInstance(
                         beanDefinition,
                         parameters,
@@ -117,10 +108,10 @@ class InstanceRegistry(
                     }
                     resultInstance = instance
                 }
-            } catch (e: Exception) {
+            } catch (executionError: Exception) {
                 resolutionStack.clear()
-                Koin.logger.err("Error while resolving instance for class '$clazzName' - error: $e ")
-                throw e
+                Koin.logger.err("Error while resolving instance for class '$clazzName' - error: $executionError ")
+                throw executionError
             }
         }
 
@@ -134,7 +125,7 @@ class InstanceRegistry(
      * @param defaultParameters
      */
     fun createEagerInstances() {
-        val definitions = beanRegistry.definitions.filter { it.isEager }
+        val definitions = beanRegistry.definitions.filter { it.options.isEager }
 
         if (definitions.isNotEmpty()) {
             Koin.logger.info("Creating instances ...")
@@ -152,7 +143,7 @@ class InstanceRegistry(
     ) {
         definitions.forEach { def ->
             proceedResolution(
-                def.clazz,
+                def.primaryType,
                 null,
                 emptyParameterDefinition()
             ) { listOf(def) }
@@ -174,7 +165,6 @@ class InstanceRegistry(
         resolutionStack.clear()
         instanceFactory.clear()
         beanRegistry.clear()
-
     }
 }
 

@@ -75,7 +75,7 @@ class OverrideTest : AutoCloseKoinTest() {
             e.printStackTrace()
         }
 
-        assertDefinitions(0)
+        assertDefinitions(1)
     }
 
     @Test

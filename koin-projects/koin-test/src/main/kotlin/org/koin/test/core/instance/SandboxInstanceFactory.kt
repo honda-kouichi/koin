@@ -7,7 +7,7 @@ import org.koin.dsl.definition.BeanDefinition
 
 /**
  * Sandbox Instance Factory
- * Create mock version of each dependency to help resolve all dependency graph without executing the real instance
+ * Create mock version of each dependency to help execute all dependency graph without executing the real instance
  */
 class SandboxInstanceFactory() : InstanceFactory() {
 
