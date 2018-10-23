@@ -4,7 +4,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.koin.core.PropertiesConfiguration
 import org.koin.dsl.module.module
-import org.koin.error.BeanInstanceCreationException
+import org.koin.error.KoinResolutionException
 import org.koin.error.MissingPropertyException
 import org.koin.standalone.StandAloneContext.startKoin
 import org.koin.standalone.get
@@ -80,7 +80,7 @@ class KoinContextTest : AutoCloseKoinTest() {
         try {
             get<ComponentA>()
             fail("should not inject ")
-        } catch (e: BeanInstanceCreationException) {
+        } catch (e: KoinResolutionException) {
             System.err.println(e)
         }
         assertRemainingInstanceHolders(1)

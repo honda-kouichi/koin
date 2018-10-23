@@ -4,6 +4,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.koin.dsl.module.module
 import org.koin.error.BeanInstanceCreationException
+import org.koin.error.KoinResolutionException
 import org.koin.standalone.StandAloneContext.startKoin
 import org.koin.standalone.get
 import org.koin.test.AutoCloseKoinTest
@@ -44,7 +45,7 @@ class BuilderTest : AutoCloseKoinTest() {
 
         try {
             assertNotNull(get<ComponentC>())
-        } catch (e: BeanInstanceCreationException) {
+        } catch (e: KoinResolutionException) {
         }
     }
 

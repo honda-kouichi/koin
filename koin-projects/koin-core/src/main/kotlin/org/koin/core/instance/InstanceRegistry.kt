@@ -28,6 +28,7 @@ import org.koin.core.scope.getScope
 import org.koin.core.stack.ResolutionStack
 import org.koin.core.time.measureDuration
 import org.koin.dsl.definition.BeanDefinition
+import org.koin.error.KoinResolutionException
 import kotlin.reflect.KClass
 
 /**
@@ -77,10 +78,9 @@ class InstanceRegistry(
             try {
                 val beanDefinition: BeanDefinition<T> =
                     beanRegistry.retrieveDefinition(
-                        clazz,
-                        scope,
                         definitionResolver,
-                        resolutionStack.last()
+                        resolutionStack.last(),
+                        scope
                     )
 
                 // Retrieve scope from DSL
@@ -109,9 +109,9 @@ class InstanceRegistry(
                     resultInstance = instance
                 }
             } catch (executionError: Exception) {
+                Koin.logger.err("Error while resolving instance type '$clazzName' - due to error: $executionError ")
                 resolutionStack.clear()
-                Koin.logger.err("Error while resolving instance for class '$clazzName' - error: $executionError ")
-                throw executionError
+                throw KoinResolutionException(executionError)
             }
         }
 

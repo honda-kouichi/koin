@@ -5,7 +5,7 @@ import org.junit.Test
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
 import org.koin.dsl.module.module
-import org.koin.error.NoScopeException
+import org.koin.error.KoinResolutionException
 import org.koin.error.NoScopeFoundException
 import org.koin.log.PrintLogger
 import org.koin.standalone.StandAloneContext.startKoin
@@ -58,7 +58,7 @@ class ScopeAPITest : AutoCloseKoinTest() {
         try {
             get<B>()
             fail()
-        } catch (e: NoScopeException) {
+        } catch (e: KoinResolutionException) {
         }
     }
 
@@ -71,7 +71,7 @@ class ScopeAPITest : AutoCloseKoinTest() {
         try {
             get<B>()
             fail()
-        } catch (e: NoScopeException) {
+        } catch (e: KoinResolutionException) {
         }
     }
 

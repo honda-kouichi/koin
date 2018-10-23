@@ -3,9 +3,9 @@ package org.koin.test.module
 import org.junit.Assert.fail
 import org.junit.Test
 import org.koin.dsl.module.module
+import org.koin.error.KoinResolutionException
 import org.koin.test.AutoCloseKoinTest
 import org.koin.test.checkModules
-import org.koin.test.error.BrokenDefinitionException
 import org.koin.test.ext.junit.assertDefinitions
 import org.koin.test.ext.junit.assertRemainingInstanceHolders
 
@@ -60,7 +60,7 @@ class CheckModulesTest : AutoCloseKoinTest() {
                 single { ComponentB(get()) }
             }))
             fail()
-        } catch (e: BrokenDefinitionException) {
+        } catch (e: KoinResolutionException) {
             System.err.println(e)
         }
 

@@ -5,7 +5,7 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module.module
-import org.koin.error.BeanInstanceCreationException
+import org.koin.error.KoinResolutionException
 import org.koin.standalone.KoinComponent
 import org.koin.standalone.StandAloneContext.startKoin
 import org.koin.standalone.inject
@@ -52,7 +52,7 @@ class ParametersInstanceTest : AutoCloseKoinTest() {
         try {
             c.compA
             fail()
-        } catch (e: BeanInstanceCreationException) {
+        } catch (e: KoinResolutionException) {
             e.printStackTrace()
         }
     }
