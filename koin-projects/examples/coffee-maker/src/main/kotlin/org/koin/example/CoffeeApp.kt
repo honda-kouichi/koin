@@ -17,7 +17,7 @@ class CoffeeApp : KoinComponent {
 fun main(vararg args: String) {
     startKoin(
         list = listOf(coffeeAppModule),
-        logger = EmptyLogger()//PrintLogger(showDebug = true)
+        logger = PrintLogger(showDebug = true)
     )
 
     val appDuration = measureDuration {
