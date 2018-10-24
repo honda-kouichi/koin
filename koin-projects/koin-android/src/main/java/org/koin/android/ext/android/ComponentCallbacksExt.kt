@@ -55,11 +55,14 @@ fun ComponentCallbacks.startKoin(
 ) {
     Koin.logger = logger
     val config = getCurrentContext()
-    config.loadAllProperties(propertiesConfiguration)
-    if (propertiesConfiguration.useKoinPropertiesFile) {
-        config.loadPropertiesForAndroid(context)
+    config.apply {
+        loadAllProperties(propertiesConfiguration)
+        if (propertiesConfiguration.useKoinPropertiesFile) {
+            loadPropertiesForAndroid(context)
+        }
+        loadModules(modules).with(context)
+        createEagerInstances()
     }
-    config.loadModules(modules).with(context)
 }
 
 /**
@@ -126,7 +129,7 @@ fun ComponentCallbacks.getKoin(): KoinContext = context()
  *
  * Deprecated - use the Scope API instead
  */
-@Deprecated("release() deprecated! Please use Scope API.")
+@Deprecated("releaseInstance() deprecated! Please use Scope API.")
 fun ComponentCallbacks.release(path: String): Unit = getKoin().release(path)
 
 
@@ -136,5 +139,5 @@ fun ComponentCallbacks.release(path: String): Unit = getKoin().release(path)
  *
  * Deprecated - use the Scope API instead
  */
-@Deprecated("release() deprecated! Please use Scope API.")
+@Deprecated("releaseInstance() deprecated! Please use Scope API.")
 fun ComponentCallbacks.releaseContext(path: String): Unit = release(path)

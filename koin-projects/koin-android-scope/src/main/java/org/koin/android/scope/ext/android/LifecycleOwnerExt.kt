@@ -43,7 +43,7 @@ fun LifecycleOwner.bindScope(scope: Scope, event: Lifecycle.Event = Lifecycle.Ev
 private fun LifecycleOwner.getKoin() = (this as ComponentCallbacks).getKoin()
 
 /**
- * Get or create Scope
+ * Get or createInstanceHolder Scope
  * @param scope Id
  */
 fun LifecycleOwner.getOrCreateScope(id : String) : Scope {

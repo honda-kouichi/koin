@@ -44,11 +44,11 @@ object StandAloneContext {
         koinConfiguration ?: error("try to use koinConfiguration but is null")
 
     /**
-     * Return current Koin context or create it
+     * Return current Koin context or createInstanceHolder it
      */
     fun getCurrentContext(): KoinConfiguration {
         if (koinConfiguration == null) {
-            Koin.logger.info("[context] create")
+            Koin.logger.info("[context] createInstanceHolder")
             koinConfiguration = KoinConfiguration.create()
         }
         return getKoinConfig()
@@ -73,6 +73,11 @@ object StandAloneContext {
     fun loadKoinModules(modules: List<Module>): KoinConfiguration {
         return getCurrentContext().loadModules(modules)
     }
+
+    /**
+     * Create instances for Single definitions marked as `createOnStart`
+     */
+    fun createEagerInstances() = getCurrentContext().createEagerInstances()
 
     /**
      * Koin starter function to load modules and extraProperties
@@ -107,6 +112,7 @@ object StandAloneContext {
             koin.apply {
                 loadAllProperties(propertiesConfiguration)
                 loadModules(list)
+                createEagerInstances()
             }
         }
         return koin

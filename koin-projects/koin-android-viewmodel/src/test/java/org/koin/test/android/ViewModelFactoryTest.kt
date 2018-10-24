@@ -31,10 +31,10 @@
 //        startKoin(listOf(module))
 //
 //        ViewModelFactory.postParameters(null, emptyParameterDefinition())
-//        val vm1 = ViewModelFactory.create(MyViewModel::class.java)
+//        val vm1 = ViewModelFactory.createInstanceHolder(MyViewModel::class.java)
 //
 //        ViewModelFactory.postParameters(null, emptyParameterDefinition())
-//        val vm2 = ViewModelFactory.create(MyViewModel::class.java)
+//        val vm2 = ViewModelFactory.createInstanceHolder(MyViewModel::class.java)
 //
 //        val service = get<MyService>()
 //

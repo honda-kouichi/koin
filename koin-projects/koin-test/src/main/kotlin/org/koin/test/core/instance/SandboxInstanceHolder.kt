@@ -13,7 +13,7 @@ import org.mockito.Mockito
 
 /**
  * SandboxInstance - InstanceHolder
- * create mock instance of given type
+ * createInstanceHolder mock instance of given type
  */
 class SandboxInstanceHolder<T>(override val bean: BeanDefinition<T>) : InstanceHolder<T> {
 

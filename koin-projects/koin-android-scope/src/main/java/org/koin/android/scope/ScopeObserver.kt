@@ -28,13 +28,13 @@ import org.koin.standalone.KoinComponent
  *
  * @author Arnaud Giuliani
  *
- * release module instances from signals : ON_STOP, ON_DESTROY
+ * releaseInstance module instances from signals : ON_STOP, ON_DESTROY
  */
 class ScopeObserver(val event: Lifecycle.Event, val target: Any, val scope: Scope) :
     LifecycleObserver, KoinComponent {
 
     /**
-     * Handle ON_DESTROY to release Koin modules
+     * Handle ON_DESTROY to releaseInstance Koin modules
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onStop() {
@@ -45,7 +45,7 @@ class ScopeObserver(val event: Lifecycle.Event, val target: Any, val scope: Scop
     }
 
     /**
-     * Handle ON_DESTROY to release Koin modules
+     * Handle ON_DESTROY to releaseInstance Koin modules
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     fun onDestroy() {

@@ -18,7 +18,7 @@ interface InstanceHolder<T> {
         } catch (e: Throwable) {
             val stack = e.stackTrace.takeWhile { !it.className.contains("sun.reflect") }
                 .joinToString("\n\t\t")
-            throw BeanInstanceCreationException("Can't create definition for '$bean' due to error :\n\t\t${e.message}\n\t\t$stack")
+            throw BeanInstanceCreationException("Can't createInstanceHolder definition for '$bean' due to error :\n\t\t${e.message}\n\t\t$stack")
         }
     }
 

@@ -1,7 +1,7 @@
 package org.koin.core.instance
 
 /**
- * Handle Path release
+ * Handle Path releaseInstance
  * Deprecated - Use Scope APi
  */
 @Deprecated("Please use Scope API instead.")

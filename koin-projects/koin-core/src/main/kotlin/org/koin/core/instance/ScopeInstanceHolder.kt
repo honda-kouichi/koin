@@ -7,7 +7,7 @@ import org.koin.dsl.definition.BeanDefinition
 
 /**
  * Scope - InstanceHolder
- * create a unique instance
+ * createInstanceHolder a unique instance
  */
 class ScopeInstanceHolder<T>(override val bean: BeanDefinition<T>, val scope: Scope) :
     InstanceHolder<T> {

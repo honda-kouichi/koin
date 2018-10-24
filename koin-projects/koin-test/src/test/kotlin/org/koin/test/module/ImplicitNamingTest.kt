@@ -21,12 +21,18 @@ class ImplicitNamingTest : AutoCloseKoinTest() {
         module("C") {
             single { ComponentA() }
             single { ComponentC(get()) }
+            single<Contract.Presenter> { ComponentD() }
         }
     }
 
     class ComponentA
     class ComponentB(val componentA: ComponentA)
     class ComponentC(val componentA: ComponentA)
+    class ComponentD : Contract.Presenter
+
+    interface Contract {
+        interface Presenter
+    }
 
     @Test
     fun `declared module from classes`() {
@@ -37,11 +43,12 @@ class ImplicitNamingTest : AutoCloseKoinTest() {
         Assert.assertNotNull(get<ComponentB>())
         Assert.assertNotNull(get<ComponentC>())
 
-        val name = ComponentA::class.java.canonicalName
-        val a_b = get<ComponentA>(name = "B.$name")
-        val a_c = get<ComponentA>(name = "C.$name")
+        val a_b = get<ComponentA>(name = "B.ComponentA")
+        val a_c = get<ComponentA>(name = "C.ComponentA")
         assertNotEquals(a_b, a_c)
 
-        assertRemainingInstanceHolders(4)
+        get<Contract.Presenter>(name = "C.Presenter")
+
+        assertRemainingInstanceHolders(5)
     }
 }

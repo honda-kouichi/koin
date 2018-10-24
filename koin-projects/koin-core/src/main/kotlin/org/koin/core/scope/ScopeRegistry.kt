@@ -32,7 +32,7 @@ class ScopeRegistry {
         if (found == null) {
             found = Scope(id, this)
             scopes[id] = found
-            Koin.logger.info("[Scope] create $id")
+            Koin.logger.info("[Scope] createInstanceHolder $id")
         }
         return found
     }
@@ -42,7 +42,7 @@ class ScopeRegistry {
         if (found == null) {
             found = Scope(id, this)
             scopes[id] = found
-            Koin.logger.info("[Scope] create $id")
+            Koin.logger.info("[Scope] createInstanceHolder $id")
         } else {
             error("Already created scope with id '$id'")
         }

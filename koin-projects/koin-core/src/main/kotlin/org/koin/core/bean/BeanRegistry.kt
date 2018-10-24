@@ -44,6 +44,15 @@ class BeanRegistry() {
      * @param def : Bean definition
      */
     fun declare(definition: BeanDefinition<*>) {
+        val alreadyExists = checkExistingDefinition(definition)
+
+        addDefinition(definition)
+
+        val kw = if (alreadyExists) "override" else "declareDefinition"
+        Koin.logger.info("[module] $kw $definition")
+    }
+
+    private fun checkExistingDefinition(definition: BeanDefinition<*>): Boolean {
         val alreadyExists = definitions.contains(definition) || names.contains(definition.name)
 
         if (alreadyExists && !definition.options.allowOverride) {
@@ -53,11 +62,7 @@ class BeanRegistry() {
                 deleteDefinition(type, definition)
             }
         }
-
-        addDefinition(definition)
-
-        val kw = if (alreadyExists) "override" else "declareDefinition"
-        Koin.logger.info("[module] $kw $definition")
+        return alreadyExists
     }
 
     private fun addDefinition(definition: BeanDefinition<*>) {
@@ -119,7 +124,6 @@ class BeanRegistry() {
         return beanDefinition?.let { listOf(beanDefinition) } ?: emptyList()
     }
 
-
     /**
      * Retrieve bean definition
      * @param clazzName - class canonicalName
@@ -133,16 +137,23 @@ class BeanRegistry() {
         scope: Scope?
     ): BeanDefinition<T> {
         val candidates: List<BeanDefinition<*>> =
-            getPossibleDefinitions(definitionResolver, lastInStack)
+            getPossibleDefinitionsFromStack(definitionResolver, lastInStack)
 
-        val candidatesForTargetScope = scope?.let {
-            candidates.filter { definition -> definition.isVisibleToScope(scope) }
-        } ?: candidates
+        val candidatesForTargetScope: List<BeanDefinition<*>> = filterDefinitionsFromScope(scope, candidates)
 
         return checkResult(candidatesForTargetScope)
     }
 
-    private fun getPossibleDefinitions(
+    private fun filterDefinitionsFromScope(
+        scope: Scope?,
+        candidates: List<BeanDefinition<*>>
+    ): List<BeanDefinition<*>> {
+        return scope?.let {
+            candidates.filter { definition -> definition.isVisibleToScope(scope) }
+        } ?: candidates
+    }
+
+    private fun getPossibleDefinitionsFromStack(
         definitionResolver: () -> List<BeanDefinition<*>>,
         lastInStack: BeanDefinition<*>?
     ): List<BeanDefinition<*>> {

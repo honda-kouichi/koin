@@ -27,7 +27,6 @@ import org.koin.core.scope.ScopeRegistry
 import org.koin.core.scope.getScope
 import org.koin.core.stack.ResolutionStack
 import org.koin.core.time.logDuration
-import org.koin.core.time.measureDuration
 import org.koin.dsl.definition.BeanDefinition
 import org.koin.error.KoinResolutionException
 import kotlin.reflect.KClass
@@ -76,32 +75,26 @@ class InstanceRegistry(
         val clazzName = clazz.fullname()
         val logIndent: String = resolutionStack.indent()
 
-        logDuration("$logIndent!-- [$clazzName] total resolution") {
+        logDuration("$logIndent!-- [$clazzName] resolved") {
             try {
-                val startChar = if (resolutionStack.isEmpty()) "+" else "+"
-                Koin.logger.info("$logIndent$startChar-- '$clazzName'")
+                val startCharacter = if (resolutionStack.isEmpty()) "+" else "+"
+                Koin.logger.info("$logIndent$startCharacter-- '$clazzName'")
 
                 val beanDefinition: BeanDefinition<T> =
-                    logDuration("$logIndent!-- [$clazzName] definition") {
-                        beanRegistry.retrieveDefinition(
-                            definitionResolver,
-                            resolutionStack.last(),
-                            scope
-                        )
-                    }
+                    getBeanDefinition(logIndent, clazzName, definitionResolver, scope)
 
                 // Retrieve scope from DSL
                 val definitionScopeId = beanDefinition.getScope()
                 val targetScope: Scope? = scope ?: scopeRegistry.getScope(definitionScopeId)
 
                 resolutionStack.execute(beanDefinition) {
-                    val (instance, created) = logDuration("$logIndent!-- [$clazzName] instance") {
-                        instanceFactory.getInstance(
-                            beanDefinition,
-                            parameters,
-                            targetScope
-                        )
-                    }
+                    val (instance, created) = resolveInstance(
+                        logIndent,
+                        clazzName,
+                        beanDefinition,
+                        parameters,
+                        targetScope
+                    )
 
                     // Log creation
                     if (created) {
@@ -116,7 +109,38 @@ class InstanceRegistry(
             }
         }
 
-        return if (resultInstance != null) resultInstance!! else error("Could not create instance for $clazzName")
+        return if (resultInstance != null) resultInstance!! else error("Could not createInstanceHolder instance for $clazzName")
+    }
+
+    private fun <T : Any> resolveInstance(
+        logIndent: String,
+        clazzName: String,
+        beanDefinition: BeanDefinition<T>,
+        parameters: ParameterDefinition,
+        targetScope: Scope?
+    ): Instance<T> {
+        return logDuration("$logIndent!-- [$clazzName] instance") {
+            instanceFactory.getInstance(
+                beanDefinition,
+                parameters,
+                targetScope
+            )
+        }
+    }
+
+    private fun <T : Any> getBeanDefinition(
+        logIndent: String,
+        clazzName: String,
+        definitionResolver: DefinitionResolver,
+        scope: Scope?
+    ): BeanDefinition<T> {
+        return logDuration("$logIndent!-- [$clazzName] definition") {
+            beanRegistry.retrieveDefinition(
+                definitionResolver,
+                resolutionStack.last(),
+                scope
+            )
+        }
     }
 
     /**
@@ -132,11 +156,6 @@ class InstanceRegistry(
         }
     }
 
-    /**
-     * Create instances for given definition list & params
-     * @param definitions
-     * @param params
-     */
     private fun createEagerInstancesForDefinitions(
         definitions: Collection<BeanDefinition<*>>
     ) {

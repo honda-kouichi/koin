@@ -8,7 +8,7 @@ import fr.ekito.myweatherapp.domain.repository.DailyForecastRepositoryRoomImpl
 import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module.module
 
-val roomDataSourceModule = module {
+val roomDataSourceModule = module(createOnStart = true) {
 
     // Weather Room Data Repository
     single<DailyForecastRepository>(override = true) { DailyForecastRepositoryRoomImpl(get(),get()) }

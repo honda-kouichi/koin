@@ -34,7 +34,7 @@ open class InstanceFactory {
     val callbacks = ArrayList<ModuleCallBack>()
 
     /**
-     * Retrieve or create instance from bean definition
+     * Retrieve or createInstanceHolder instance from bean definition
      * @return Instance / has been created
      */
     fun <T : Any> getInstance(
@@ -43,19 +43,33 @@ open class InstanceFactory {
         scope: Scope? = null
     ): Instance<T> {
         // find holder
-        var holder: InstanceHolder<T>? = find(def)
-        if (holder == null) {
-            holder = create(def, scope)
-            save(def, holder)
-        }
+        val holder: InstanceHolder<T> = getOrCreateInstanceHolder(def, scope)
 
         if (holder is ScopeInstanceHolder && holder.scope.isClosed) {
             throw ClosedScopeException("Can't reuse a closed scope : $scope")
         }
-        return holder.get(p)
+
+        return resolveInstance(holder, p)
     }
 
-    private fun <T : Any> save(
+    private fun <T : Any> resolveInstance(
+        holder: InstanceHolder<T>,
+        p: ParameterDefinition
+    ): Instance<T> = holder.get(p)
+
+    private fun <T : Any> getOrCreateInstanceHolder(
+        def: BeanDefinition<T>,
+        scope: Scope?
+    ): InstanceHolder<T> {
+        var holder: InstanceHolder<T>? = find(def)
+        if (holder == null) {
+            holder = createInstanceHolder(def, scope)
+            saveHolder(def, holder)
+        }
+        return holder
+    }
+
+    private fun <T : Any> saveHolder(
         def: BeanDefinition<T>,
         holder: InstanceHolder<T>
     ) {
@@ -72,7 +86,7 @@ open class InstanceFactory {
     /**
      * Create InstanceHolder
      */
-    open fun <T : Any> create(def: BeanDefinition<T>, scope: Scope? = null): InstanceHolder<T> {
+    open fun <T : Any> createInstanceHolder(def: BeanDefinition<T>, scope: Scope? = null): InstanceHolder<T> {
         return when (def.kind) {
             Kind.Single -> SingleInstanceHolder(def)
             Kind.Factory -> FactoryInstanceHolder(def)
@@ -84,7 +98,7 @@ open class InstanceFactory {
                         scope
                     )
                 } else {
-                    if (scope == null) throw NoScopeException("Definition '$def' has to be used with a scope. Please create and specify a scope to use with your definition")
+                    if (scope == null) throw NoScopeException("Definition '$def' has to be used with a scope. Please createInstanceHolder and specify a scope to use with your definition")
                     else throw ClosedScopeException("Can't reuse a closed scope : $scope")
                 }
             }
@@ -94,9 +108,9 @@ open class InstanceFactory {
     /**
      * Release definition instance
      */
-    fun release(definition: BeanDefinition<*>) {
+    fun releaseInstance(definition: BeanDefinition<*>) {
         if (definition.kind == Kind.Scope) {
-            Koin.logger.debug("release $definition")
+            Koin.logger.debug("releaseInstance $definition")
             val holder = find(definition)
             holder?.let {
                 instances.remove(definition.name)
@@ -107,7 +121,7 @@ open class InstanceFactory {
     /**
      * Delete Instance Holder
      */
-    fun delete(definition: BeanDefinition<*>) {
+    fun deleteInstance(definition: BeanDefinition<*>) {
         instances.remove(definition.name)
     }
 

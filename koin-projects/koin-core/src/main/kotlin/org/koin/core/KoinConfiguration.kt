@@ -4,7 +4,6 @@ import org.koin.core.instance.ModuleCallBack
 import org.koin.core.scope.ScopeCallback
 import org.koin.core.scope.getScope
 import org.koin.core.time.logDuration
-import org.koin.core.time.measureDuration
 import org.koin.dsl.context.ModuleDefinition
 import org.koin.dsl.definition.BeanDefinition
 import org.koin.dsl.definition.BeanDefinitionOptions
@@ -38,8 +37,11 @@ class KoinConfiguration(private val koinContext: KoinContext) {
             Koin.logger.info("[modules] loaded ${beanRegistry.definitions.size} definitions")
         }
 
-        instanceRegistry.createEagerInstances()
         return this
+    }
+
+    fun createEagerInstances() {
+        instanceRegistry.createEagerInstances()
     }
 
     /**
@@ -69,7 +71,7 @@ class KoinConfiguration(private val koinContext: KoinContext) {
             val name = defineDefinitionName(definition, consolidatedPath)
             val def = updateDefinition(definition, name, eager, override, consolidatedPath)
 
-            instanceFactory.delete(def)
+            instanceFactory.deleteInstance(def)
             beanRegistry.declare(def)
         }
 
@@ -110,7 +112,9 @@ class KoinConfiguration(private val koinContext: KoinContext) {
             val scopeString = if (scope.isEmpty()) "" else "$scope."
             val pathString =
                 if (consolidatedPath == Path.root()) "" else "$consolidatedPath."
-            "$scopeString$pathString${definition.primaryType.fullname()}"
+            val fullClassname = definition.primaryType.fullname()
+            val finalName = fullClassname.split(".").takeLast(2).joinToString(".")
+            "$scopeString$pathString$finalName"
         } else name
     }
 
@@ -183,7 +187,7 @@ class KoinConfiguration(private val koinContext: KoinContext) {
     }
 
     /**
-     * Register ModuleCallBack - being notified on Path release
+     * Register ModuleCallBack - being notified on Path releaseInstance
      * @see ScopeCallback - ModuleCallBack
      *
      * Deprecared - Use the Scope API
