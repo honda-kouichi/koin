@@ -90,7 +90,7 @@ class KoinContext(
     /**
      * Create a scope
      */
-    fun createScope(id: String): Scope = scopeRegistry.createScope(id)
+    fun createScope(id: String): Scope = scopeRegistry.tryCreateScope(id)
 
     /**
      * Create a scope
@@ -152,7 +152,7 @@ class KoinContext(
      * Close all resources
      */
     fun close() {
-        logger.info("[Close] Closing Koin context")
+        logger?.info("[Koin] Closing Koin context")
         instanceRegistry.close()
         scopeRegistry.close()
         propertyResolver.clear()

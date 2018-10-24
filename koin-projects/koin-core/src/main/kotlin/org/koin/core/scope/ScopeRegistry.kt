@@ -16,6 +16,7 @@
 package org.koin.core.scope
 
 import org.koin.core.Koin
+import org.koin.error.ScopeAlreadyCreatedException
 
 /**
  * Scope Registry
@@ -26,31 +27,48 @@ class ScopeRegistry {
     private val scopes = HashMap<String, Scope>()
     private val scopeCallbacks: ArrayList<ScopeCallback> = arrayListOf()
 
+    /**
+     * Try tro create a scope
+     * throw ScopeAlreadyCreatedException
+     */
+    fun tryCreateScope(id : String): Scope {
+        var found = getScope(id)
+        if (found == null) {
+            found = createScope(id)
+        } else {
+            throw ScopeAlreadyCreatedException("Scope '$id' already created ")
+        }
+        return found
+    }
 
+    private fun createScope(
+        id: String
+    ): Scope {
+        val found = Scope(id, this)
+        scopes[id] = found
+        Koin.logger?.debug("[Scope] create '$id'")
+        return found
+    }
+
+    /**
+     * Get or create scope for given id
+     */
     fun getOrCreateScope(id: String): Scope {
         var found = getScope(id)
         if (found == null) {
-            found = Scope(id, this)
-            scopes[id] = found
-            Koin.logger.info("[Scope] createInstanceHolder $id")
+            found = createScope(id)
         }
         return found
     }
 
-    fun createScope(id: String): Scope {
-        var found = getScope(id)
-        if (found == null) {
-            found = Scope(id, this)
-            scopes[id] = found
-            Koin.logger.info("[Scope] createInstanceHolder $id")
-        } else {
-            error("Already created scope with id '$id'")
-        }
-        return found
-    }
-
+    /**
+     * Retrieve scope for id
+     */
     fun getScope(id: String) = scopes[id]
 
+    /**
+     * close given scope
+     */
     fun closeScope(scope: Scope) {
         val id = scope.id
         scopes.remove(id)
@@ -58,14 +76,20 @@ class ScopeRegistry {
         scopeCallbacks.forEach { it.onClose(id) }
     }
 
+    /**
+     * Register ScopeCallback
+     */
+    fun register(callback: ScopeCallback) {
+        Koin.logger?.debug("[Scope] callback registering with $callback")
+        scopeCallbacks += callback
+    }
+
+    /**
+     * Close ScopeRegistry resources
+     */
     fun close() {
         scopes.values.forEach { it.holders.clear() }
         scopes.clear()
-        Koin.logger.debug("[Close] Closing all scopes")
-    }
-
-    fun register(callback: ScopeCallback) {
-        Koin.logger.info("[Scope] callback registering with $callback")
-        scopeCallbacks += callback
+        Koin.logger?.debug("[Close] Closing all scopes")
     }
 }

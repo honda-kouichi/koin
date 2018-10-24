@@ -15,7 +15,6 @@
  */
 package org.koin.core
 
-import org.koin.log.EmptyLogger
 import org.koin.log.Logger
 
 
@@ -30,5 +29,5 @@ object Koin {
     /**
      * Koin Logger
      */
-    var logger: Logger = EmptyLogger()
+    var logger: Logger? = null
 }

@@ -34,7 +34,7 @@ class KoinConfiguration(private val koinContext: KoinContext) {
                 registerDefinitions(module(koinContext))
             }
 
-            Koin.logger.info("[modules] loaded ${beanRegistry.definitions.size} definitions")
+            Koin.logger?.info("[modules] loaded ${beanRegistry.definitions.size} definitions")
         }
 
         return this
@@ -168,17 +168,14 @@ class KoinConfiguration(private val koinContext: KoinContext) {
         props: PropertiesConfiguration
     ): KoinConfiguration = synchronized(this) {
         if (props.useKoinPropertiesFile) {
-            Koin.logger.info("[properties] load koin.properties")
             loadPropertiesFromFile()
         }
 
         if (props.extraProperties.isNotEmpty()) {
-            Koin.logger.info("[properties] load extras properties : ${props.extraProperties.size}")
             loadProperties(props.extraProperties)
         }
 
         if (props.useEnvironmentProperties) {
-            Koin.logger.info("[properties] load environment properties")
             loadEnvironmentProperties()
         }
         return this
@@ -202,7 +199,7 @@ class KoinConfiguration(private val koinContext: KoinContext) {
             val koinProperties = Properties()
             koinProperties.load(content.byteInputStream())
             val nb = propertyResolver.import(koinProperties)
-            Koin.logger.info("[properties] loaded $nb properties from '$koinFile' file")
+            Koin.logger?.debug("[properties] loaded $nb properties from '$koinFile' file")
         }
     }
 
@@ -211,9 +208,9 @@ class KoinConfiguration(private val koinContext: KoinContext) {
      */
     private fun loadEnvironmentProperties() {
         val n1 = propertyResolver.import(System.getProperties())
-        Koin.logger.info("[properties] loaded $n1 properties from properties")
+        Koin.logger?.debug("[properties] loaded $n1 properties from properties")
         val n2 = propertyResolver.import(System.getenv().toProperties())
-        Koin.logger.info("[properties] loaded $n2 properties from env properties")
+        Koin.logger?.debug("[properties] loaded $n2 properties from env properties")
     }
 
     /**

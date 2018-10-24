@@ -48,7 +48,7 @@ object StandAloneContext {
      */
     fun getCurrentContext(): KoinConfiguration {
         if (koinConfiguration == null) {
-            Koin.logger.info("[context] createInstanceHolder")
+            Koin.logger?.info("[Koin] create context")
             koinConfiguration = KoinConfiguration.create()
         }
         return getKoinConfig()

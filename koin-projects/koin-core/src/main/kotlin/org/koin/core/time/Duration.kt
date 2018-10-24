@@ -11,7 +11,7 @@ fun <T> logDuration(logMessage: String? = null, code: () -> T): T {
     val result = code()
     val duration = (System.nanoTime() - start) / 1000000.0
     logMessage?.let {
-        Koin.logger.debug("$logMessage in $duration ms")
+        Koin.logger?.debug("$logMessage in $duration ms")
     }
     return result
 }

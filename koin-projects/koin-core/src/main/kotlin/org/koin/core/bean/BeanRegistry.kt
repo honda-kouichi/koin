@@ -49,7 +49,7 @@ class BeanRegistry() {
         addDefinition(definition)
 
         val kw = if (alreadyExists) "override" else "declareDefinition"
-        Koin.logger.info("[module] $kw $definition")
+        Koin.logger?.info("[module] $kw $definition")
     }
 
     private fun checkExistingDefinition(definition: BeanDefinition<*>): Boolean {

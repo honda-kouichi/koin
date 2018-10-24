@@ -34,7 +34,7 @@ import java.util.*
  * @param androidContext - Context
  */
 infix fun KoinConfiguration.with(androidContext: Context): KoinConfiguration {
-    Koin.logger.info("[init] declareDefinition Android Context")
+    Koin.logger?.info("[init] declareDefinition Android Context")
     declareAndroidContext(androidContext)
     if (androidContext is Application) {
         declareAndroidApplication(androidContext)
@@ -73,9 +73,9 @@ fun KoinConfiguration.loadPropertiesForAndroid(
     try {
         androidContext.assets.open(koinPropertyFile).use { koinProperties.load(it) }
         val nb = getKoin().loadProperties(koinProperties)
-        Koin.logger.info("[Android-Properties] loaded $nb properties from assets/koin.properties")
+        Koin.logger?.info("[Android-Properties] loaded $nb properties from assets/koin.properties")
     } catch (e: Exception) {
-        Koin.logger.info("[Android-Properties] no properties in assets/$koinPropertyFile to load")
+        Koin.logger?.info("[Android-Properties] no properties in assets/$koinPropertyFile to load")
     }
     return this
 }

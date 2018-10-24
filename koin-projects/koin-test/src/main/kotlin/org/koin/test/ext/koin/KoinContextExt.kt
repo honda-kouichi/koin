@@ -35,7 +35,7 @@ import kotlin.reflect.KClass
  * Check all loaded definitions by resolving them one by one
  */
 fun KoinContext.dryRun() {
-    Koin.logger.info("[Check Modules]")
+    Koin.logger?.info("[Check Modules]")
     instanceRegistry.dryRun()
 }
 

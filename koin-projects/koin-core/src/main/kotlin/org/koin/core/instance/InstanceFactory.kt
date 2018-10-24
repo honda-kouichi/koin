@@ -110,7 +110,7 @@ open class InstanceFactory {
      */
     fun releaseInstance(definition: BeanDefinition<*>) {
         if (definition.kind == Kind.Scope) {
-            Koin.logger.debug("releaseInstance $definition")
+            Koin.logger?.debug("releaseInstance $definition")
             val holder = find(definition)
             holder?.let {
                 instances.remove(definition.name)

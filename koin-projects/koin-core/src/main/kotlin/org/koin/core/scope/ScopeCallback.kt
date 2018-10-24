@@ -18,6 +18,7 @@ package org.koin.core.scope
 
 /**
  * Module callback
+ * Help Notify on scope closing
  * @author - Arnaud GIULIANI
  */
 interface ScopeCallback {

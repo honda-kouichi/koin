@@ -78,7 +78,7 @@ class InstanceRegistry(
         logDuration("$logIndent!-- [$clazzName] resolved") {
             try {
                 val startCharacter = if (resolutionStack.isEmpty()) "+" else "+"
-                Koin.logger.info("$logIndent$startCharacter-- '$clazzName'")
+                Koin.logger?.info("$logIndent$startCharacter-- '$clazzName'")
 
                 val beanDefinition: BeanDefinition<T> =
                     getBeanDefinition(logIndent, clazzName, definitionResolver, scope)
@@ -98,12 +98,12 @@ class InstanceRegistry(
 
                     // Log creation
                     if (created) {
-                        Koin.logger.info("$logIndent\\-- (*) Created")
+                        Koin.logger?.info("$logIndent\\-- (*) Created")
                     }
                     resultInstance = instance
                 }
             } catch (executionError: Exception) {
-                Koin.logger.err("Error while resolving instance type '$clazzName' - due to error: $executionError ")
+                Koin.logger?.err("Error while resolving instance type '$clazzName' - due to error: $executionError ")
                 resolutionStack.clear()
                 throw KoinResolutionException(executionError)
             }
@@ -151,7 +151,7 @@ class InstanceRegistry(
         val definitions = beanRegistry.definitions.filter { it.options.isEager }
 
         if (definitions.isNotEmpty()) {
-            Koin.logger.info("Creating instances ...")
+            Koin.logger?.info("Creating instances ...")
             createEagerInstancesForDefinitions(definitions)
         }
     }
@@ -179,7 +179,7 @@ class InstanceRegistry(
      * Close res
      */
     fun close() {
-        Koin.logger.debug("[Close] Closing instance resolver")
+        Koin.logger?.debug("[Koin] Closing instance resolver")
         resolutionStack.clear()
         instanceFactory.clear()
         beanRegistry.clear()
