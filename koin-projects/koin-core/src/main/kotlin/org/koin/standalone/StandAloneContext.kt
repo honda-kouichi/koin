@@ -91,24 +91,23 @@ object StandAloneContext {
     fun startKoin(
         list: List<Module>,
         propertiesConfiguration: PropertiesConfiguration = PropertiesConfiguration(),
-        logger: Logger = PrintLogger()
+        logger: Logger? = PrintLogger()
     ): KoinConfiguration {
         if (isStarted) {
             throw AlreadyStartedException("Koin is already started. Run startKoin only once or use loadKoinModules")
         }
-        val koin = startNewContext(logger, propertiesConfiguration, list)
+        Koin.logger = logger
+        val koin = startNewContext(propertiesConfiguration, list)
         isStarted = true
         return koin
     }
 
     private fun startNewContext(
-        logger: Logger,
         propertiesConfiguration: PropertiesConfiguration,
         list: List<Module>
     ): KoinConfiguration {
         val koin = getCurrentContext()
         logDuration("[Koin] started") {
-            Koin.logger = logger
             koin.apply {
                 loadAllProperties(propertiesConfiguration)
                 loadModules(list)
