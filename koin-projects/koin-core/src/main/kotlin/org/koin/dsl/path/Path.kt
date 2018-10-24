@@ -30,6 +30,10 @@ data class Path(val name: String, val parent: Path? = null) {
         return if (parentPath.isNotEmpty()) "$parentPath.$name" else name
     }
 
+    fun getConsolidatedPath(): String {
+        return if (this == Path.root()) "" else "$this."
+    }
+
     companion object {
         const val ROOT = ""
         fun root() = Path(ROOT)

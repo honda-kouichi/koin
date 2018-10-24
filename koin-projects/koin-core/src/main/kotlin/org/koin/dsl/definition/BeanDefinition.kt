@@ -15,6 +15,7 @@
  */
 package org.koin.dsl.definition
 
+import org.koin.core.scope.getScope
 import org.koin.dsl.path.Path
 import org.koin.error.DefinitionBindingException
 import kotlin.reflect.KClass
@@ -83,14 +84,19 @@ data class BeanDefinition<T>(
         other as BeanDefinition<*>
 
         if (name != other.name) return false
-        if (types != other.types) return false
+        if (primaryType != other.primaryType) return false
         if (attributes != other.attributes) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return name.hashCode() + types.hashCode() + attributes.hashCode()
+        return name.hashCode() + primaryType.hashCode() + attributes.hashCode()
+    }
+
+    fun getScopeName(): String {
+        val scope = getScope()
+        return if (scope.isEmpty()) "" else "$scope."
     }
 
     companion object {

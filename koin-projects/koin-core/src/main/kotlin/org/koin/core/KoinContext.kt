@@ -15,7 +15,7 @@
  */
 package org.koin.core
 
-import org.koin.core.Koin.Companion.logger
+import org.koin.core.Koin.logger
 import org.koin.core.bean.BeanRegistry
 import org.koin.core.instance.InstanceFactory
 import org.koin.core.instance.InstanceRegistry

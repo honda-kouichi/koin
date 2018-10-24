@@ -53,7 +53,7 @@ class BeanRegistry() {
     }
 
     private fun checkExistingDefinition(definition: BeanDefinition<*>): Boolean {
-        val alreadyExists = definitions.contains(definition) || names.contains(definition.name)
+        val alreadyExists = definitions.contains(definition)
 
         if (alreadyExists && !definition.options.allowOverride) {
             throw BeanOverrideException("Try to override definition with $definition, but override is not allowed. Use 'override' option in your definition or module.")

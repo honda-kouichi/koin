@@ -8,7 +8,6 @@ import org.koin.standalone.StandAloneContext.startKoin
 import org.koin.standalone.get
 import org.koin.test.AutoCloseKoinTest
 import org.koin.test.ext.junit.assertDefinitions
-import org.koin.test.ext.junit.assertRemainingInstanceHolders
 
 class ImplicitNamingTest : AutoCloseKoinTest() {
 
@@ -21,16 +20,27 @@ class ImplicitNamingTest : AutoCloseKoinTest() {
         module("C") {
             single { ComponentA() }
             single { ComponentC(get()) }
-            single<Contract.Presenter> { ComponentD() }
+        }
+    }
+
+    val conflictNames = module {
+        module("C") {
+            single<Contract1.Presenter> { ComponentD() }
+            single<Contract2.Presenter> { ComponentE() }
         }
     }
 
     class ComponentA
     class ComponentB(val componentA: ComponentA)
     class ComponentC(val componentA: ComponentA)
-    class ComponentD : Contract.Presenter
+    class ComponentD : Contract1.Presenter
+    class ComponentE : Contract2.Presenter
 
-    interface Contract {
+    interface Contract1 {
+        interface Presenter
+    }
+
+    interface Contract2 {
         interface Presenter
     }
 
@@ -46,9 +56,18 @@ class ImplicitNamingTest : AutoCloseKoinTest() {
         val a_b = get<ComponentA>(name = "B.ComponentA")
         val a_c = get<ComponentA>(name = "C.ComponentA")
         assertNotEquals(a_b, a_c)
+    }
 
-        get<Contract.Presenter>(name = "C.Presenter")
+    @Test
+    fun `resolve conflicting names`() {
+        startKoin(listOf(conflictNames))
 
-        assertRemainingInstanceHolders(5)
+        assertDefinitions(2)
+
+        get<Contract1.Presenter>()
+        get<Contract2.Presenter>()
+
+        get<Contract1.Presenter>(name = "C.Presenter")
+
     }
 }

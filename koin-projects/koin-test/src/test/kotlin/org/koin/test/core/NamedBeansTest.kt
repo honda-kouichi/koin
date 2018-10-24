@@ -5,6 +5,7 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.koin.dsl.module.module
 import org.koin.error.BeanOverrideException
+import org.koin.error.KoinResolutionException
 import org.koin.standalone.StandAloneContext.startKoin
 import org.koin.standalone.get
 import org.koin.test.AutoCloseKoinTest
@@ -63,8 +64,9 @@ class NamedBeansTest : AutoCloseKoinTest() {
     fun `should not resolve different types for same bean name`() {
         try {
             startKoin(listOf(DataSourceModule, ServiceModule))
+            get<Service>(name = "debug")
             fail()
-        } catch (e: BeanOverrideException) {
+        } catch (e: KoinResolutionException) {
         }
 
 //        val debug = get<Datasource>("debug")

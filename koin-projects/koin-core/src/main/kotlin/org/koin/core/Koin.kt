@@ -17,7 +17,6 @@ package org.koin.core
 
 import org.koin.log.EmptyLogger
 import org.koin.log.Logger
-import kotlin.reflect.KClass
 
 
 /**
@@ -27,16 +26,9 @@ import kotlin.reflect.KClass
  * @author - Arnaud GIULIANI
  * @author - Laurent BARESSE
  */
-class Koin {
-    companion object {
-        /**
-         * Koin Logger
-         */
-        var logger: Logger = EmptyLogger()
-    }
+object Koin {
+    /**
+     * Koin Logger
+     */
+    var logger: Logger = EmptyLogger()
 }
-
-/**
- * Help Get/display name
- */
-internal fun <T : Any> KClass<T>.fullname(): String = java.canonicalName

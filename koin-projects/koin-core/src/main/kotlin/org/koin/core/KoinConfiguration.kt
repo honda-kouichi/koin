@@ -2,13 +2,13 @@ package org.koin.core
 
 import org.koin.core.instance.ModuleCallBack
 import org.koin.core.scope.ScopeCallback
-import org.koin.core.scope.getScope
 import org.koin.core.time.logDuration
 import org.koin.dsl.context.ModuleDefinition
 import org.koin.dsl.definition.BeanDefinition
 import org.koin.dsl.definition.BeanDefinitionOptions
 import org.koin.dsl.module.Module
 import org.koin.dsl.path.Path
+import org.koin.ext.simpleName
 import java.util.*
 
 /**
@@ -52,37 +52,78 @@ class KoinConfiguration(private val koinContext: KoinContext) {
         parentModuleDefinition: ModuleDefinition? = null,
         path: Path = Path.root()
     ) {
-        val modulePath: Path =
-            pathRegistry.makePath(moduleDefinition.path, parentModuleDefinition?.path)
-        val consolidatedPath =
-            if (path != Path.root()) modulePath.copy(parent = path) else modulePath
-
-        pathRegistry.savePath(consolidatedPath)
+        val modulePath =
+            savePath(moduleDefinition, parentModuleDefinition, path)
 
         // Add definitions & propagate eager/override
         moduleDefinition.definitions.forEach { definition ->
-            val definitionOptions = definition.options
-            val eager =
-                if (moduleDefinition.createOnStart) moduleDefinition.createOnStart else definitionOptions.isEager
-            val override =
-                if (moduleDefinition.override) moduleDefinition.override else {
-                    definitionOptions.allowOverride
-                }
-            val name = defineDefinitionName(definition, consolidatedPath)
-            val def = updateDefinition(definition, name, eager, override, consolidatedPath)
-
-            instanceFactory.deleteInstance(def)
-            beanRegistry.declare(def)
+            val def = prepareDefinitionOptions(definition, moduleDefinition, modulePath)
+            saveDefinition(def)
         }
 
         // Check sub contexts
         moduleDefinition.subModules.forEach { subModule ->
-            registerDefinitions(
-                subModule,
-                moduleDefinition,
-                consolidatedPath
-            )
+            proceedNextModule(subModule, moduleDefinition, modulePath)
         }
+    }
+
+    private fun proceedNextModule(
+        subModule: ModuleDefinition,
+        moduleDefinition: ModuleDefinition,
+        modulePath: Path
+    ) {
+        registerDefinitions(
+            subModule,
+            moduleDefinition,
+            modulePath
+        )
+    }
+
+    private fun saveDefinition(def: BeanDefinition<out Any?>) {
+        instanceFactory.deleteInstance(def)
+        beanRegistry.declare(def)
+    }
+
+    private fun prepareDefinitionOptions(
+        definition: BeanDefinition<*>,
+        moduleDefinition: ModuleDefinition,
+        modulePath: Path
+    ): BeanDefinition<out Any?> {
+        val definitionOptions = definition.options
+        val eager =
+            if (moduleDefinition.createOnStart) moduleDefinition.createOnStart else definitionOptions.isEager
+        val override =
+            if (moduleDefinition.override) moduleDefinition.override else {
+                definitionOptions.allowOverride
+            }
+        val name = defineDefinitionName(definition, modulePath)
+        return updateDefinition(definition, name, eager, override, modulePath)
+    }
+
+    private fun savePath(
+        moduleDefinition: ModuleDefinition,
+        parentModuleDefinition: ModuleDefinition?,
+        path: Path
+    ): Path {
+        val modulePath: Path =
+            makePath(moduleDefinition, parentModuleDefinition)
+        val consolidatedPath =
+            getConsolidatedPath(path, modulePath)
+
+        pathRegistry.savePath(consolidatedPath)
+        return consolidatedPath
+    }
+
+    private fun makePath(
+        moduleDefinition: ModuleDefinition,
+        parentModuleDefinition: ModuleDefinition?
+    ) = pathRegistry.makePath(moduleDefinition.path, parentModuleDefinition?.path)
+
+    private fun getConsolidatedPath(
+        path: Path,
+        modulePath: Path
+    ): Path {
+        return if (path != Path.root()) modulePath.copy(parent = path) else modulePath
     }
 
     private fun updateDefinition(
@@ -108,13 +149,10 @@ class KoinConfiguration(private val koinContext: KoinContext) {
     ): String {
         val name = definition.name
         return if (name.isEmpty()) {
-            val scope = definition.getScope()
-            val scopeString = if (scope.isEmpty()) "" else "$scope."
-            val pathString =
-                if (consolidatedPath == Path.root()) "" else "$consolidatedPath."
-            val fullClassname = definition.primaryType.fullname()
-            val finalName = fullClassname.split(".").takeLast(2).joinToString(".")
-            "$scopeString$pathString$finalName"
+            val scopeString = definition.getScopeName()
+            val pathString = consolidatedPath.getConsolidatedPath()
+            val className = definition.primaryType.simpleName()
+            "$scopeString$pathString$className"
         } else name
     }
 

@@ -18,7 +18,6 @@ package org.koin.core.instance
 import org.koin.core.Koin
 import org.koin.core.bean.BeanRegistry
 import org.koin.core.bean.DefinitionResolver
-import org.koin.core.fullname
 import org.koin.core.parameter.ParameterDefinition
 import org.koin.core.parameter.emptyParameterDefinition
 import org.koin.core.path.PathRegistry
@@ -29,6 +28,7 @@ import org.koin.core.stack.ResolutionStack
 import org.koin.core.time.logDuration
 import org.koin.dsl.definition.BeanDefinition
 import org.koin.error.KoinResolutionException
+import org.koin.ext.fullname
 import kotlin.reflect.KClass
 
 /**
